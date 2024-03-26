@@ -28,8 +28,8 @@ jobs:
       run: |
         python3 -m pytest --import-mode=append tests/
 
-  build-dev:
-    needs: unit-tests
+jobs:
+  build-main:
     runs-on: ubuntu-latest 
     defaults:
       run:
@@ -49,7 +49,18 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
+          password: ${{secrets.TOKEN}}
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.36.0
+        id: setversion
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          WITH_V: true
 
       - name: Store short Commit ID in env variable
         id: vars
@@ -59,23 +70,16 @@ jobs:
 
       - name: "Build, Tag, and push the Docker image"
         env:
-          IMAGE_NAME: ghcr.io/manimatter/decluttarr
-          IMAGE_TAG: dev
+          IMAGE_NAME: ghcr.io/D34DC3N73R/decluttarr
+          IMAGE_TAG: dev 
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 -f docker/Dockerfile . \
             --progress plain \
             -t $IMAGE_NAME:$IMAGE_TAG \
+            -t $IMAGE_NAME:latest \
             --label com.decluttarr.version=$IMAGE_TAG \
             --label com.decluttarr.commit=$SHORT_COMMIT_ID \
             --build-arg IMAGE_TAG=$IMAGE_TAG \
             --build-arg SHORT_COMMIT_ID=$SHORT_COMMIT_ID \
             --push \
-   
-
-      - name: "Delete untagged versions"
-        uses: actions/delete-package-versions@v4
-        with: 
-          package-name: 'decluttarr'
-          package-type: 'container'
-          delete-only-untagged-versions: 'true'
