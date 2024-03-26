@@ -50,7 +50,7 @@ jobs:
 
       - name: "Build, Tag, and push the Docker image"
         env:
-          IMAGE_NAME: ghcr.io/D34DC3N73R/decluttarr
+          IMAGE_NAME: ghcr.io/d34dc3n73r/decluttarr
           IMAGE_TAG: ${{ steps.setversion.outputs.new_tag }} 
         run: |
           docker buildx build \
